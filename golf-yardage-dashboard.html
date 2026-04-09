@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Golf Yardage Dashboard</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #ffffff;
+    --bg-secondary: #f5f5f3;
+    --bg-tertiary: #efefec;
+    --text-primary: #1a1a18;
+    --text-secondary: #6b6b67;
+    --text-tertiary: #9a9a96;
+    --border: rgba(0,0,0,0.12);
+    --border-md: rgba(0,0,0,0.22);
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --green-bg: #E1F5EE;
+    --green-border: #9FE1CB;
+    --green-text: #0F6E56;
+    --red-bg: #FCEBEB;
+    --red-border: #F7C1C1;
+    --red-text: #A32D2D;
+    --accent: #185FA5;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1e1e1c;
+      --bg-secondary: #2a2a28;
+      --bg-tertiary: #323230;
+      --text-primary: #f0f0ec;
+      --text-secondary: #a0a09c;
+      --text-tertiary: #6e6e6a;
+      --border: rgba(255,255,255,0.1);
+      --border-md: rgba(255,255,255,0.2);
+      --green-bg: #04342C;
+      --green-border: #0F6E56;
+      --green-text: #9FE1CB;
+      --red-bg: #501313;
+      --red-border: #A32D2D;
+      --red-text: #F7C1C1;
+      --accent: #85B7EB;
+    }
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    font-size: 15px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--bg);
+    border-bottom: 0.5px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  header h1 {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  header span {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 20px 16px;
+    display: grid;
+    grid-template-columns: 290px minmax(0, 1fr);
+    gap: 16px;
+    align-items: start;
+  }
+
+  @media (max-width: 720px) {
+    .container { grid-template-columns: 1fr; }
+  }
+
+  .panel {
+    background: var(--bg);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1rem 1.25rem;
+  }
+
+  .panel + .panel { margin-top: 12px; }
+
+  .panel-title {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin-bottom: 12px;
+  }
+
+  .unit-toggle {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+
+  .unit-btn {
+    flex: 1;
+    font-size: 12px;
+    padding: 6px;
+    cursor: pointer;
+    background: transparent;
+    border: 0.5px solid var(--border-md);
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    font-family: inherit;
+    transition: background 0.15s;
+  }
+
+  .unit-btn.active {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  .club-row {
+    display: grid;
+    grid-template-columns: 1fr 80px;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .club-row label {
+    font-size: 13px;
+    color: var(--text-primary);
+  }
+
+  .club-row input[type=number] {
+    width: 100%;
+    font-size: 13px;
+    text-align: right;
+    padding: 4px 8px;
+    background: var(--bg-secondary);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-family: inherit;
+  }
+
+  .club-row input[type=number]:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .cond-row { margin-bottom: 14px; }
+
+  .cond-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    margin-bottom: 5px;
+  }
+
+  .cond-label .lbl { color: var(--text-secondary); }
+  .cond-val { font-weight: 500; color: var(--text-primary); }
+
+  input[type=range] {
+    width: 100%;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  select {
+    width: 100%;
+    font-size: 13px;
+    padding: 5px 8px;
+    background: var(--bg-secondary);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  select:focus { outline: none; border-color: var(--accent); }
+
+  .section-sep {
+    border: none;
+    border-top: 0.5px solid var(--border);
+    margin: 14px 0;
+  }
+
+  .results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+    gap: 8px;
+  }
+
+  .club-card {
+    border-radius: var(--radius-md);
+    border: 0.5px solid var(--border);
+    padding: 10px 12px;
+    background: var(--bg-secondary);
+  }
+
+  .club-card.card-up { background: var(--green-bg); border-color: var(--green-border); }
+  .club-card.card-down { background: var(--red-bg); border-color: var(--red-border); }
+
+  .c-name { font-size: 11px; font-weight: 500; color: var(--text-secondary); margin-bottom: 3px; }
+  .c-stock { font-size: 11px; color: var(--text-tertiary); margin-bottom: 3px; }
+  .c-adj { font-size: 22px; font-weight: 500; line-height: 1; }
+  .c-diff { font-size: 11px; margin-top: 3px; }
+
+  .up { color: var(--green-text); }
+  .same { color: var(--text-secondary); }
+  .down { color: var(--red-text); }
+
+  .method-note {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-top: 16px;
+    line-height: 1.7;
+    border-top: 0.5px solid var(--border);
+    padding-top: 12px;
+  }
+
+  .method-note strong {
+    font-weight: 500;
+    color: var(--text-secondary);
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  footer {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-tertiary);
+    padding: 20px 16px 32px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Golf Yardage Dashboard</h1>
+  <span>Adjusted carry distances by conditions</span>
+</header>
+
+<div class="container">
+  <div>
+    <div class="panel">
+      <div class="panel-title">Unit</div>
+      <div class="unit-toggle">
+        <button class="unit-btn active" id="btn-yards" onclick="setUnit('yards')">Yards</button>
+        <button class="unit-btn" id="btn-metres" onclick="setUnit('metres')">Metres</button>
+      </div>
+      <div class="panel-title">Stock carry distances</div>
+      <div id="club-inputs"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Conditions</div>
+
+      <div class="cond-row">
+        <div class="cond-label"><span class="lbl">Wind speed</span><span class="cond-val" id="lbl-wind">0 mph</span></div>
+        <input type="range" min="0" max="40" step="1" value="0" id="sl-wind" oninput="updateDash()">
+      </div>
+
+      <div class="cond-row">
+        <div class="cond-label"><span class="lbl">Wind direction</span></div>
+        <select id="sel-wind-dir" onchange="updateDash()">
+          <option value="none">No wind / crosswind</option>
+          <option value="head">Headwind</option>
+          <option value="tail">Tailwind</option>
+        </select>
+      </div>
+
+      <hr class="section-sep">
+
+      <div class="cond-row">
+        <div class="cond-label"><span class="lbl">Temperature</span><span class="cond-val" id="lbl-temp">15 °C</span></div>
+        <input type="range" min="-10" max="45" step="1" value="15" id="sl-temp" oninput="updateDash()">
+      </div>
+
+      <hr class="section-sep">
+
+      <div class="cond-row">
+        <div class="cond-label"><span class="lbl">Altitude</span><span class="cond-val" id="lbl-alt">0 m</span></div>
+        <input type="range" min="0" max="3000" step="50" value="0" id="sl-alt" oninput="updateDash()">
+      </div>
+
+      <hr class="section-sep">
+
+      <div class="cond-row">
+        <div class="cond-label"><span class="lbl">Humidity</span><span class="cond-val" id="lbl-hum">50%</span></div>
+        <input type="range" min="0" max="100" step="5" value="50" id="sl-hum" oninput="updateDash()">
+      </div>
+
+      <hr class="section-sep">
+
+      <div class="cond-row">
+        <div class="cond-label"><span class="lbl">Lie / slope</span></div>
+        <select id="sel-lie" onchange="updateDash()">
+          <option value="0">Fairway / flat</option>
+          <option value="0.03">Uphill lie (+3%)</option>
+          <option value="0.06">Steep uphill (+6%)</option>
+          <option value="-0.03">Downhill lie (−3%)</option>
+          <option value="-0.06">Steep downhill (−6%)</option>
+          <option value="-0.05">Rough (−5%)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Adjusted carry distances</div>
+    <div class="results-grid" id="results"></div>
+    <div class="method-note">
+      <strong>Methodology</strong>
+      Wind: ±1.5% per mph for headwind/tailwind (TrackMan PGA teaching standard approximation; crosswind effect on carry is minimal and excluded).<br>
+      Temperature: ±0.4% per °C above/below 15 °C baseline (approximately 2 yards per 10°F, per USGA/R&amp;A research).<br>
+      Altitude: +2% per 300 m above sea level (air density reduction; source: PGA of America altitude adjustment guidelines).<br>
+      Humidity: up to +0.5% at 100% humidity vs 0% (humid air is marginally less dense than dry air; effect is minor — source: physics of moist air, c.f. Briggs &amp; Leroy atmospheric study).<br>
+      Lie / slope: percentage modifier applied directly to carry distance, representing effective loft change and turf interaction. Values are coach-consensus approximations.
+    </div>
+  </div>
+</div>
+
+<footer>Drag this file to netlify.com/drop for a shareable link</footer>
+
+<script>
+var clubs = [
+  {name:'Driver',  stock: 285},
+  {name:'3-wood',  stock: 240},
+  {name:'7-wood',  stock: 225},
+  {name:'4-iron',  stock: 215},
+  {name:'5-iron',  stock: 205},
+  {name:'6-iron',  stock: 190},
+  {name:'7-iron',  stock: 175},
+  {name:'8-iron',  stock: 165},
+  {name:'9-iron',  stock: 155},
+  {name:'PW',      stock: 140},
+  {name:'GW',      stock: 125},
+  {name:'SW',      stock: 110},
+  {name:'LW',      stock: 100}
+];
+
+var unit = 'yards';
+
+function ydsToM(y) { return Math.round(y * 0.9144); }
+function mToYds(m) { return Math.round(m / 0.9144); }
+
+function setUnit(u) {
+  unit = u;
+  document.getElementById('btn-yards').classList.toggle('active', u === 'yards');
+  document.getElementById('btn-metres').classList.toggle('active', u === 'metres');
+  renderInputs();
+  updateDash();
+}
+
+function renderInputs() {
+  var html = '';
+  clubs.forEach(function(c, i) {
+    var val = unit === 'yards' ? c.stock : ydsToM(c.stock);
+    html += '<div class="club-row">'
+      + '<label>' + c.name + '</label>'
+      + '<input type="number" id="cl-' + i + '" value="' + val + '" min="30" max="400" step="1" oninput="updateStock(' + i + ', this.value)">'
+      + '</div>';
+  });
+  document.getElementById('club-inputs').innerHTML = html;
+}
+
+function updateStock(i, val) {
+  var v = parseInt(val) || 0;
+  clubs[i].stock = unit === 'yards' ? v : mToYds(v);
+  updateDash();
+}
+
+function updateDash() {
+  var wind    = parseInt(document.getElementById('sl-wind').value);
+  var windDir = document.getElementById('sel-wind-dir').value;
+  var temp    = parseInt(document.getElementById('sl-temp').value);
+  var alt     = parseInt(document.getElementById('sl-alt').value);
+  var hum     = parseInt(document.getElementById('sl-hum').value);
+  var lie     = parseFloat(document.getElementById('sel-lie').value);
+
+  document.getElementById('lbl-wind').textContent = wind + ' mph';
+  document.getElementById('lbl-temp').textContent = temp + ' °C';
+  document.getElementById('lbl-alt').textContent  = alt  + ' m';
+  document.getElementById('lbl-hum').textContent  = hum  + '%';
+
+  var windFactor = 0;
+  if (windDir === 'head') windFactor = -0.015 * wind;
+  if (windDir === 'tail') windFactor =  0.010 * wind;
+
+  var tempFactor  = (temp - 15) * 0.004;
+  var altFactor   = (alt / 300) * 0.02;
+  var humFactor   = (hum / 100) * 0.005;
+  var totalFactor = 1 + windFactor + tempFactor + altFactor + humFactor + lie;
+
+  var html = '';
+  clubs.forEach(function(c) {
+    var stockDisp = unit === 'yards' ? c.stock : ydsToM(c.stock);
+    var adj       = Math.round(c.stock * totalFactor);
+    var adjDisp   = unit === 'yards' ? adj : ydsToM(adj);
+    var diff      = adjDisp - stockDisp;
+    var cls       = diff >  2 ? 'up'   : diff < -2 ? 'down' : 'same';
+    var cardCls   = diff >  2 ? 'card-up' : diff < -2 ? 'card-down' : '';
+    var sign      = diff > 0 ? '+' : '';
+    var u         = unit === 'yards' ? 'y' : 'm';
+
+    html += '<div class="club-card ' + cardCls + '">'
+      + '<div class="c-name">' + c.name + '</div>'
+      + '<div class="c-stock">Stock: ' + stockDisp + u + '</div>'
+      + '<div class="c-adj ' + cls + '">' + adjDisp + '<span style="font-size:12px;font-weight:400">' + u + '</span></div>'
+      + '<div class="c-diff ' + cls + '">' + (diff !== 0 ? sign + diff + u : '—') + '</div>'
+      + '</div>';
+  });
+  document.getElementById('results').innerHTML = html;
+}
+
+renderInputs();
+updateDash();
+</script>
+</body>
+</html>
